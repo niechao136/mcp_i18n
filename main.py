@@ -42,7 +42,7 @@ def call_chatflow_with_markdown(markdown_table: str) -> str:
 
 
 # Init
-mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0")
+mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0", port=8001)
 
 
 @mcp.tool()
