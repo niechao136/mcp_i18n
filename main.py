@@ -1,5 +1,6 @@
 import io
 import json
+import tempfile
 
 import pandas as pd
 import requests
@@ -46,13 +47,25 @@ mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0", port=8001)
 
 
 @mcp.tool()
-async def extract_execl(file: bytes) -> str:
-    """提取 Excel 文件内容并以 Markdown 表格格式返回
+async def extract_execl(file_url: str) -> str:
+    """从URL提取 Excel 文件内容并以 Markdown 表格格式返回
 
     Args:
-        file: 上传的 Execl 文件
+        file_url: Excel 文件的 URL
     """
-    df = pd.read_excel(file, engine='openpyxl')
+    # 下载 Excel 文件
+    response = requests.get(file_url)
+    response.raise_for_status()
+
+    # 使用临时文件保存内容
+    with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp_file:
+        tmp_file.write(response.content)
+        tmp_file.flush()
+
+        # 读取 Excel 文件
+        df = pd.read_excel(tmp_file.name, engine='openpyxl')
+
+    # 生成 Markdown 表格
     markdown = "| " + " | ".join(df.columns) + " |\n"
     markdown += "| " + " | ".join(["---"] * len(df.columns)) + " |\n"
     for _, row in df.iterrows():
@@ -91,20 +104,19 @@ async def process_excel(markdown_table: str) -> bytes:
 
 
 @mcp.tool()
-def upload_and_process_excel(file: bytes) -> bytes:
+async def upload_and_process_excel(file_url: str) -> bytes:
     """
     主工具：自动调用 extract -> process
-    上传 Excel 文件后自动提取内容并进行翻译，返回新文件
+    通过 Excel 文件 URL 自动提取内容并进行翻译，返回新文件
 
     Args:
-        file: 上传的 Execl 文件
+        file_url: Excel 文件的 URL
     """
-    extracted_data = extract_execl(file=file)
-    processed_file = process_excel(content=extracted_data)
+    extracted_data = await extract_execl(file_url=file_url)
+    processed_file = await process_excel(markdown_table=extracted_data)
     return processed_file
 
 
 if __name__ == "__main__":
     # Initialize and run the server
     mcp.run(transport='streamable-http')
-
