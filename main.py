@@ -65,11 +65,15 @@ async def extract_execl(file_url: str) -> str:
         # 读取 Excel 文件
         df = pd.read_excel(tmp_file.name, engine='openpyxl')
 
+    # 排除所有项目都为空的行
+    df = df.replace("", pd.NA).dropna(how="all")
+
     # 生成 Markdown 表格
-    markdown = "| " + " | ".join(df.columns) + " |\n"
-    markdown += "| " + " | ".join(["---"] * len(df.columns)) + " |\n"
+    markdown = "|" + "|".join(df.columns) + "|\n"
+    markdown += "|" + "|".join(["---"] * len(df.columns)) + "|\n"
     for _, row in df.iterrows():
-        markdown += "| " + " | ".join(str(cell) for cell in row) + " |\n"
+        row_values = ["" if pd.isna(cell) else str(cell) for cell in row]
+        markdown += "|" + "|".join(row_values) + "|\n"
     return markdown
 
 
