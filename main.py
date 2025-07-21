@@ -166,6 +166,7 @@ def upload_and_process_excel(file_url: str) -> dict:
 
 if __name__ == "__main__":
     app = mcp.streamable_http_app()
+    os.makedirs("static", exist_ok=True)
     app.mount("/static", StaticFiles(directory="static"), name="static")
     # Initialize and run the server
     mcp.run(transport='streamable-http')
