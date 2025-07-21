@@ -85,7 +85,7 @@ def extract_execl(file_url: str) -> str:
 
 
 @mcp.tool()
-def process_excel(markdown_table: str) -> dict:
+def process_excel(markdown_table: str) -> str:
     """
     调用 Chatflow 服务翻译 Markdown 表格内容，并将结果生成新的 Excel 文件。
 
@@ -93,13 +93,7 @@ def process_excel(markdown_table: str) -> dict:
         markdown_table: Markdown 表格字符串，需符合表格结构要求
 
     返回:
-        包含翻译后 Excel 文件链接的字典对象，格式为:
-        {
-            "type": "link",
-            "name": "<文件名称>",
-            "url": "<文件链接>",
-            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        }
+        翻译后 Excel 的文件链接
     """
 
     # 1. 调用 Chatflow
@@ -134,16 +128,11 @@ def process_excel(markdown_table: str) -> dict:
     # 构造文件 URL（假设运行在 http://106.15.201.186:8001）
     file_url = f"http://106.15.201.186:8001/static/{file_name}"
 
-    return {
-        "type": "link",
-        "name": file_name,
-        "url": file_url,
-        "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    }
+    return file_url
 
 
 @mcp.tool()
-def upload_and_process_excel(file_url: str) -> dict:
+def upload_and_process_excel(file_url: str) -> str:
     """
     一站式处理 Excel 文件的工具：下载 Excel、提取为 Markdown、调用翻译服务并返回处理后的 Excel 文件。
 
@@ -151,13 +140,7 @@ def upload_and_process_excel(file_url: str) -> dict:
         file_url: Excel 文件的直链 URL
 
     返回:
-        翻译后 Excel 文件链接的字典对象，格式为:
-        {
-            "type": "link",
-            "name": "<文件名称>",
-            "url": "<文件链接>",
-            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        }
+        翻译后 Excel 的文件链接
     """
 
     extracted_data = extract_execl(file_url=file_url)
