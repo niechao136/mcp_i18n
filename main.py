@@ -77,7 +77,7 @@ def extract_execl(file_url: str) -> str:
 
 
 @mcp.tool()
-def process_excel(markdown_table: str) -> bytes:
+def process_excel(markdown_table: str) -> dict:
     """从 Markdown 表格中调用 Chatflow 翻译文件，获取处理后的 Markdown，并转为 Excel 文件
 
     Args:
@@ -105,11 +105,16 @@ def process_excel(markdown_table: str) -> bytes:
     # 3. 写入 Excel 文件
     output = io.BytesIO()
     df.to_excel(output, index=False, engine='openpyxl')
-    return output.getvalue()
+    return {
+        "type": "file",
+        "name": "translated.xlsx",
+        "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "content": output.getvalue()
+    }
 
 
 @mcp.tool()
-def upload_and_process_excel(file_url: str) -> bytes:
+def upload_and_process_excel(file_url: str) -> dict:
     """
     主工具：自动调用 extract -> process
     通过 Excel 文件 URL 自动提取内容并进行翻译，返回新文件
