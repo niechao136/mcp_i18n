@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 import requests
+import uvicorn
 from fastapi.staticfiles import StaticFiles
 from mcp.server.fastmcp import FastMCP
 
@@ -169,4 +170,4 @@ if __name__ == "__main__":
     os.makedirs("static", exist_ok=True)
     app.mount("/static", StaticFiles(directory="static"), name="static")
     # Initialize and run the server
-    mcp.run(transport='streamable-http')
+    uvicorn.run(app, host="0.0.0.0", port=8001)
