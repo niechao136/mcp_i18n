@@ -1,6 +1,7 @@
 import io
 import tempfile
 import json
+import base64
 
 import pandas as pd
 import requests
@@ -109,7 +110,7 @@ def process_excel(markdown_table: str) -> dict:
         "type": "file",
         "name": "translated.xlsx",
         "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content": output.getvalue()
+        "content": base64.b64encode(output.getvalue()).decode("utf-8")
     }
 
 
