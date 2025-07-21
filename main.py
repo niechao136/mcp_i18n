@@ -48,11 +48,16 @@ mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0", port=8001)
 
 @mcp.tool()
 def extract_execl(file_url: str) -> str:
-    """从URL提取 Excel 文件内容并以 Markdown 表格格式返回
-
-    Args:
-        file_url: Excel 文件的 URL
     """
+    下载一个 Excel 文件并提取其表格内容，返回 Markdown 格式的字符串。
+
+    参数:
+        file_url: Excel 文件的直链 URL
+
+    返回:
+        表格内容，格式为 Markdown 表格字符串。
+    """
+
     # 下载 Excel 文件
     response = requests.get(file_url)
     response.raise_for_status()
@@ -79,10 +84,20 @@ def extract_execl(file_url: str) -> str:
 
 @mcp.tool()
 def process_excel(markdown_table: str) -> dict:
-    """从 Markdown 表格中调用 Chatflow 翻译文件，获取处理后的 Markdown，并转为 Excel 文件
+    """
+    调用 Chatflow 服务翻译 Markdown 表格内容，并将结果生成新的 Excel 文件。
 
-    Args:
-        markdown_table: Markdown 表格字符串
+    参数:
+        markdown_table: Markdown 表格字符串，需符合表格结构要求
+
+    返回:
+        包含翻译后 Excel 文件的字典对象，格式为:
+        {
+            "type": "file",
+            "name": "translated.xlsx",
+            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content": "<base64 编码内容>"
+        }
     """
 
     # 1. 调用 Chatflow
@@ -117,12 +132,21 @@ def process_excel(markdown_table: str) -> dict:
 @mcp.tool()
 def upload_and_process_excel(file_url: str) -> dict:
     """
-    主工具：自动调用 extract -> process
-    通过 Excel 文件 URL 自动提取内容并进行翻译，返回新文件
+    一站式处理 Excel 文件的工具：下载 Excel、提取为 Markdown、调用翻译服务并返回处理后的 Excel 文件。
 
-    Args:
-        file_url: Excel 文件的 URL
+    参数:
+        file_url: Excel 文件的直链 URL
+
+    返回:
+        翻译后 Excel 文件的字典对象，格式为:
+        {
+            "type": "file",
+            "name": "translated.xlsx",
+            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content": "<base64 编码内容>"
+        }
     """
+
     extracted_data = extract_execl(file_url=file_url)
     processed_file = process_excel(markdown_table=extracted_data)
     return processed_file
