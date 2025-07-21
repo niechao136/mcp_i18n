@@ -1,6 +1,6 @@
 import io
-import json
 import tempfile
+import json
 
 import pandas as pd
 import requests
@@ -31,15 +31,14 @@ def call_chatflow_with_markdown(markdown_table: str) -> str:
     result = response.json()
 
     # 提取 answer 字符串并解析成 JSON
-    answer_str = result.get("data", {}).get("outputs", {}).get("answer", "")
-    if not answer_str:
-        raise ValueError("响应中未找到 answer 字段")
+    answer_str = result.get("answer", "")
 
     try:
-        answer_json = json.loads(answer_str)
-        return answer_json.get("md", "")
-    except json.JSONDecodeError:
-        raise ValueError("answer 字段不是有效的 JSON 字符串")
+        cleaned = answer_str.encode('unicode_escape').decode()
+        answer_dict = json.loads(cleaned)
+        return answer_dict.get("md", "")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"answer 字段不是合法 JSON：{e}")
 
 
 # Init
@@ -47,7 +46,7 @@ mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0", port=8001)
 
 
 @mcp.tool()
-async def extract_execl(file_url: str) -> str:
+def extract_execl(file_url: str) -> str:
     """从URL提取 Excel 文件内容并以 Markdown 表格格式返回
 
     Args:
@@ -58,7 +57,7 @@ async def extract_execl(file_url: str) -> str:
     response.raise_for_status()
 
     # 使用临时文件保存内容
-    with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp_file:
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
         tmp_file.write(response.content)
         tmp_file.flush()
 
@@ -78,7 +77,7 @@ async def extract_execl(file_url: str) -> str:
 
 
 @mcp.tool()
-async def process_excel(markdown_table: str) -> bytes:
+def process_excel(markdown_table: str) -> bytes:
     """从 Markdown 表格中调用 Chatflow 翻译文件，获取处理后的 Markdown，并转为 Excel 文件
 
     Args:
@@ -93,10 +92,12 @@ async def process_excel(markdown_table: str) -> bytes:
     if len(lines) < 3:
         raise ValueError("返回的 Markdown 表格无效")
 
-    headers = [col.strip() for col in lines[0].strip('|').split('|')]
+    headers = [col.strip() for col in lines[0].split('|')]
+    headers = headers[1:-1]
     rows = []
     for line in lines[2:]:
-        parts = [cell.strip() for cell in line.strip('|').split('|')]
+        parts = [cell.strip() for cell in line.split('|')]
+        parts = parts[1:-1]
         rows.append(parts)
 
     df = pd.DataFrame(rows, columns=headers)
@@ -108,7 +109,7 @@ async def process_excel(markdown_table: str) -> bytes:
 
 
 @mcp.tool()
-async def upload_and_process_excel(file_url: str) -> bytes:
+def upload_and_process_excel(file_url: str) -> bytes:
     """
     主工具：自动调用 extract -> process
     通过 Excel 文件 URL 自动提取内容并进行翻译，返回新文件
@@ -116,8 +117,8 @@ async def upload_and_process_excel(file_url: str) -> bytes:
     Args:
         file_url: Excel 文件的 URL
     """
-    extracted_data = await extract_execl(file_url=file_url)
-    processed_file = await process_excel(markdown_table=extracted_data)
+    extracted_data = extract_execl(file_url=file_url)
+    processed_file = process_excel(markdown_table=extracted_data)
     return processed_file
 
 
