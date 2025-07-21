@@ -1,10 +1,11 @@
-import io
-import tempfile
 import json
-import base64
+import os
+import tempfile
+from datetime import datetime, timezone
 
 import pandas as pd
 import requests
+from fastapi.staticfiles import StaticFiles
 from mcp.server.fastmcp import FastMCP
 
 API_URL = "https://genieai.wise-apps.com:18081/v1/chat-messages"
@@ -91,12 +92,12 @@ def process_excel(markdown_table: str) -> dict:
         markdown_table: Markdown 表格字符串，需符合表格结构要求
 
     返回:
-        包含翻译后 Excel 文件的字典对象，格式为:
+        包含翻译后 Excel 文件链接的字典对象，格式为:
         {
-            "type": "file",
-            "name": "translated.xlsx",
-            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "content": "<base64 编码内容>"
+            "type": "link",
+            "name": "<文件名称>",
+            "url": "<文件链接>",
+            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         }
     """
 
@@ -118,14 +119,25 @@ def process_excel(markdown_table: str) -> dict:
 
     df = pd.DataFrame(rows, columns=headers)
 
-    # 3. 写入 Excel 文件
-    output = io.BytesIO()
-    df.to_excel(output, index=False, engine='openpyxl')
+    # 创建 static 目录（如果不存在）
+    os.makedirs("static", exist_ok=True)
+
+    # 用唯一文件名保存
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    file_name = f"translated_{timestamp}.xlsx"
+    file_path = os.path.join("static", file_name)
+
+    # 保存文件
+    df.to_excel(file_path, index=False, engine="openpyxl")
+
+    # 构造文件 URL（假设运行在 http://106.15.201.186:8001）
+    file_url = f"http://106.15.201.186:8001/static/{file_name}"
+
     return {
-        "type": "file",
-        "name": "translated.xlsx",
-        "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content": base64.b64encode(output.getvalue()).decode("utf-8")
+        "type": "link",
+        "name": file_name,
+        "url": file_url,
+        "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     }
 
 
@@ -138,12 +150,12 @@ def upload_and_process_excel(file_url: str) -> dict:
         file_url: Excel 文件的直链 URL
 
     返回:
-        翻译后 Excel 文件的字典对象，格式为:
+        翻译后 Excel 文件链接的字典对象，格式为:
         {
-            "type": "file",
-            "name": "translated.xlsx",
-            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "content": "<base64 编码内容>"
+            "type": "link",
+            "name": "<文件名称>",
+            "url": "<文件链接>",
+            "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         }
     """
 
@@ -153,5 +165,7 @@ def upload_and_process_excel(file_url: str) -> dict:
 
 
 if __name__ == "__main__":
+    app = mcp.streamable_http_app()
+    app.mount("/static", StaticFiles(directory="static"), name="static")
     # Initialize and run the server
     mcp.run(transport='streamable-http')
