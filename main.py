@@ -49,9 +49,9 @@ mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0", port=8001)
 
 
 @mcp.tool()
-def extract_execl(file_url: str) -> str:
+def extract_excel(file_url: str) -> str:
     """
-    下载一个 Excel 文件并提取其表格内容，返回 Markdown 格式的字符串。
+    根据 Excel 文件的直链 URL 下载文件并提取其表格内容，返回 Markdown 格式的字符串。
 
     参数:
         file_url: Excel 文件的直链 URL
@@ -87,7 +87,7 @@ def extract_execl(file_url: str) -> str:
 @mcp.tool()
 def process_excel(markdown_table: str) -> str:
     """
-    调用 Chatflow 服务翻译 Markdown 表格内容，并将结果生成新的 Excel 文件。
+    接受 Markdown 表格字符串，调用 Chatflow 服务翻译 Markdown 表格内容，并将结果生成新的 Excel 文件，返回文件链接
 
     参数:
         markdown_table: Markdown 表格字符串，需符合表格结构要求
@@ -143,7 +143,7 @@ def upload_and_process_excel(file_url: str) -> str:
         翻译后 Excel 的文件链接
     """
 
-    extracted_data = extract_execl(file_url=file_url)
+    extracted_data = extract_excel(file_url=file_url)
     processed_file = process_excel(markdown_table=extracted_data)
     return processed_file
 
