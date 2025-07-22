@@ -131,21 +131,21 @@ def process_excel(markdown_table: str) -> str:
     return file_url
 
 
-@mcp.tool()
-def upload_and_process_excel(file_url: str) -> str:
-    """
-    一站式处理 Excel 文件的工具：下载 Excel、提取为 Markdown、调用翻译服务并返回处理后的 Excel 文件。
-
-    参数:
-        file_url: Excel 文件的直链 URL
-
-    返回:
-        翻译后 Excel 的文件链接
-    """
-
-    extracted_data = extract_excel(file_url=file_url)
-    processed_file = process_excel(markdown_table=extracted_data)
-    return processed_file
+# @mcp.tool()
+# def upload_and_process_excel(file_url: str) -> str:
+#     """
+#     一站式处理 Excel 文件的工具：下载 Excel、提取为 Markdown、调用翻译服务并返回处理后的 Excel 文件。
+#
+#     参数:
+#         file_url: Excel 文件的直链 URL
+#
+#     返回:
+#         翻译后 Excel 的文件链接
+#     """
+#
+#     extracted_data = extract_excel(file_url=file_url)
+#     processed_file = process_excel(markdown_table=extracted_data)
+#     return processed_file
 
 
 if __name__ == "__main__":
