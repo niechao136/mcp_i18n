@@ -8,9 +8,12 @@ import requests
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from mcp.server.fastmcp import FastMCP
+from starlette.routing import Route
+from starlette.responses import JSONResponse
 
 API_URL = "https://genieai.wise-apps.com:18081/v1/chat-messages"
 API_KEY = "app-Sb0viPbp1QnIAdk3lKgtacEK"
+VERSION = "master"
 
 
 def call_chatflow_with_markdown(markdown_table: str) -> str:
@@ -43,6 +46,13 @@ def call_chatflow_with_markdown(markdown_table: str) -> str:
     except json.JSONDecodeError as e:
         raise ValueError(f"answer 字段不是合法 JSON：{e}")
 
+
+# 路由：返回版本号
+async def get_version(request):
+    """
+    返回当前应用的版本信息
+    """
+    return JSONResponse({"version": VERSION})
 
 # Init
 mcp = FastMCP("i18n", stateless_http=True, host="0.0.0.0", port=8001)
@@ -152,5 +162,6 @@ if __name__ == "__main__":
     app = mcp.streamable_http_app()
     os.makedirs("static", exist_ok=True)
     app.mount("/static", StaticFiles(directory="static"), name="static")
+    app.routes.append(Route("/version", get_version))
     # Initialize and run the server
     uvicorn.run(app, host="0.0.0.0", port=8001)
