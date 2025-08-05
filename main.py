@@ -13,7 +13,7 @@ from starlette.responses import JSONResponse
 
 API_URL = "https://genieai.wise-apps.com:18081/v1/chat-messages"
 API_KEY = "app-Sb0viPbp1QnIAdk3lKgtacEK"
-VERSION = "master"
+VERSION = "release_1.0"
 
 
 def call_chatflow_with_markdown(markdown_table: str) -> str:
